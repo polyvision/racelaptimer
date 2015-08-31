@@ -27,7 +27,7 @@
      <item>
       <widget class="QTabWidget" name="tabWidget">
        <property name="currentIndex">
-        <number>3</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="tab">
         <attribute name="title">
@@ -66,6 +66,97 @@
           </property>
           <property name="text">
            <string>connect</string>
+          </property>
+         </widget>
+        </widget>
+        <widget class="QGroupBox" name="groupBox_4">
+         <property name="geometry">
+          <rect>
+           <x>330</x>
+           <y>20</y>
+           <width>621</width>
+           <height>391</height>
+          </rect>
+         </property>
+         <property name="title">
+          <string>sound effects</string>
+         </property>
+         <widget class="QLabel" name="label">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>30</y>
+            <width>121</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Lap-Beep:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="label_4">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>60</y>
+            <width>121</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Fastest Lap shout:</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="buttonChangeLapBeepPath">
+          <property name="geometry">
+           <rect>
+            <x>520</x>
+            <y>30</y>
+            <width>71</width>
+            <height>32</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+         <widget class="QPushButton" name="buttonChangeFastestLapShout">
+          <property name="geometry">
+           <rect>
+            <x>520</x>
+            <y>60</y>
+            <width>71</width>
+            <height>32</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>...</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="labelSettingsLapBeep">
+          <property name="geometry">
+           <rect>
+            <x>150</x>
+            <y>30</y>
+            <width>341</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+         </widget>
+         <widget class="QLabel" name="labelSettingsFastestLapShoutPath">
+          <property name="geometry">
+           <rect>
+            <x>140</x>
+            <y>60</y>
+            <width>371</width>
+            <height>16</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string/>
           </property>
          </widget>
         </widget>

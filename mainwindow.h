@@ -30,6 +30,10 @@ private slots:
 
     void onCurrentRacePilotDataChanged();
     void onCurrentRaceFastestLapDataChanged();
+    void on_buttonChangeLapBeepPath_clicked();
+
+    void on_buttonChangeFastestLapShout_clicked();
+
 private:
     void    setupCOMPortGUI();
     Ui::MainWindow *ui;

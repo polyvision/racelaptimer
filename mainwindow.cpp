@@ -6,11 +6,17 @@
 #include <QInputDialog>
 #include "racepilot.h"
 #include "currentpilotracelap.h"
+#include "settings.h"
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    QCoreApplication::setOrganizationName("polyvision UG");
+    QCoreApplication::setOrganizationDomain("polyvision.org");
+    QCoreApplication::setApplicationName("RaceLapTimer");
+
     ui->setupUi(this);
     this->m_pRLTDatabase = RLTDatabase::instance();
 
@@ -40,6 +46,10 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->m_tableViewRaces->hideColumn(0); // don't show the ID
 
     this->setupCOMPortGUI();
+
+    // settings
+    this->ui->labelSettingsLapBeep->setText(Settings::instance()->getLapBeepPath());
+    this->ui->labelSettingsFastestLapShoutPath->setText(Settings::instance()->getFastestLapSoundPath());
 
     connect(CurrentRace::instance(),SIGNAL(pilotDataChanged()),this,SLOT(onCurrentRacePilotDataChanged()));
     connect(CurrentRace::instance(),SIGNAL(fastedLapChanged()),this,SLOT(onCurrentRaceFastestLapDataChanged()));
@@ -174,5 +184,25 @@ void MainWindow::onCurrentRaceFastestLapDataChanged(){
     RacePilot *fastestPilot = CurrentRace::instance()->getFastestPilot();
     if(fastestPilot){
        this->ui->labelFastestLapData->setText(QString("Pilot: %1 Lap: %2 Time: %3").arg(fastestPilot->getPilotName()).arg(fastestPilot->getFastedLap()->getLap()).arg(fastestPilot->getFastedLap()->formatedLapTime()));
+    }
+}
+
+void MainWindow::on_buttonChangeLapBeepPath_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Select WAV"), NULL, tr("sound files (*.wav)"));
+    if(!fileName.isEmpty()){
+        Settings::instance()->setLapBeepPath(fileName);
+        this->ui->labelSettingsLapBeep->setText(fileName);
+    }
+}
+
+void MainWindow::on_buttonChangeFastestLapShout_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Select WAV"), NULL, tr("sound files (*.wav)"));
+    if(!fileName.isEmpty()){
+        Settings::instance()->setFastestLapSoundPath(fileName);
+        this->ui->labelSettingsFastestLapShoutPath->setText(fileName);
     }
 }

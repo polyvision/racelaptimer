@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     currentpilotracelap.cpp \
     qextserialport/qextserialenumerator.cpp \
     qextserialport/qextserialport.cpp \
-    sfx.cpp
+    sfx.cpp \
+    settings.cpp
 
 HEADERS  += mainwindow.h \
     rltdatabase.h \
@@ -33,7 +34,8 @@ HEADERS  += mainwindow.h \
     qextserialport/qextserialport.h \
     qextserialport/qextserialport_global.h \
     qextserialport/qextserialport_p.h \
-    sfx.h
+    sfx.h \
+    settings.h
 
 macx {
   SOURCES += qextserialport/qextserialenumerator_osx.cpp \
