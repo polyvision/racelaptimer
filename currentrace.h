@@ -23,12 +23,15 @@ public:
     explicit CurrentRace(QObject *parent = 0);
     void    incommingPilotSignal(QString);
 
-    void    updateTableWidget(QTableWidget*,QLabel*);
     void    startRace(int,MainWindow*);
     void    stopRace();
 
     RacePilot* getFastestPilot();
+    QList<RacePilot*>* getPilotsList();
+
 signals:
+    void pilotDataChanged();
+    void fastedLapChanged();
 
 public slots:
 private:

@@ -28,6 +28,8 @@ private slots:
     void onDsrChanged(bool status);
     void on_buttonStartRace_clicked();
 
+    void onCurrentRacePilotDataChanged();
+    void onCurrentRaceFastestLapDataChanged();
 private:
     void    setupCOMPortGUI();
     Ui::MainWindow *ui;

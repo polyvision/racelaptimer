@@ -38,6 +38,10 @@ void CurrentRace::incommingPilotSignal(QString token){
         pilot->fireLapTime();
         SFX::instance()->playBeep();
     }
+
+    emit pilotDataChanged();
+    emit fastedLapChanged();
+    qDebug() << "emitted";
 }
 
 RacePilot* CurrentRace::getPilotByToken(QString token){
@@ -47,52 +51,6 @@ RacePilot* CurrentRace::getPilotByToken(QString token){
         }
     }
     return NULL;
-}
-
-void CurrentRace::updateTableWidget(QTableWidget *widget,QLabel *fastestLapLabel){
-    widget->clearContents();
-    widget->setColumnCount(5);
-    widget->setRowCount(m_listPilots.size());
-    widget->setHorizontalHeaderItem(0,new QTableWidgetItem("Pilot"));
-    widget->setHorizontalHeaderItem(1,new QTableWidgetItem("Laps"));
-    widget->setHorizontalHeaderItem(2,new QTableWidgetItem("Last Lap Time"));
-    widget->setHorizontalHeaderItem(3,new QTableWidgetItem("Fasted Lap"));
-    widget->setHorizontalHeaderItem(4,new QTableWidgetItem("Fasted Lap Time"));
-
-    for (int i = 0; i < m_listPilots.size(); ++i) {
-
-        RacePilot *pilot = m_listPilots.at(i);
-
-        // pilot name
-        QTableWidgetItem *itemPilotName = new QTableWidgetItem(pilot->getPilotName());
-        widget->setItem(i,0,itemPilotName);
-
-        // lap count
-        QTableWidgetItem *itemLapCount = new QTableWidgetItem(QString("%1").arg(pilot->lapCount()));
-        widget->setItem(i,1,itemLapCount);
-
-        // last lap time
-        if(pilot->hasLastLapTime()){
-            QTableWidgetItem *itemLastLapTime = new QTableWidgetItem(QString("%1").arg(pilot->lastLapTimeString()));
-            widget->setItem(i,2,itemLastLapTime);
-        }
-
-        // fastest lap // fastest lap time
-        if(pilot->getFastedLap()){
-            QTableWidgetItem *itemFastestLap = new QTableWidgetItem(QString("%1").arg(pilot->getFastedLap()->getLap()));
-            widget->setItem(i,3,itemFastestLap);
-
-            QTableWidgetItem *itemFastestLapTime = new QTableWidgetItem(QString("%1").arg(pilot->getFastedLap()->formatedLapTime()));
-            widget->setItem(i,4,itemFastestLapTime);
-        }
-
-    }
-
-    // updating fastest pilot
-    RacePilot *fastestPilot = this->getFastestPilot();
-    if(fastestPilot){
-        fastestLapLabel->setText(QString("Pilot: %1 Lap: %2 Time:%3").arg(fastestPilot->getPilotName()).arg(fastestPilot->getFastedLap()->getLap()).arg(fastestPilot->getFastedLap()->formatedLapTime()));
-    }
 }
 
 /*
@@ -129,4 +87,8 @@ RacePilot* CurrentRace::getFastestPilot(){
     }
 
     return fastestPilot;
+}
+
+QList<RacePilot*>* CurrentRace::getPilotsList(){
+    return &m_listPilots;
 }
