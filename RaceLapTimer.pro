@@ -37,6 +37,8 @@ HEADERS  += mainwindow.h \
     sfx.h \
     settings.h
 
+ICON = app_icon.png
+
 macx {
   SOURCES += qextserialport/qextserialenumerator_osx.cpp \
             qextserialport/qextserialport_unix.cpp

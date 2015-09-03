@@ -3,10 +3,13 @@
 #include <QSqlQuery>
 #include "currentpilotracelap.h"
 #include <QDebug>
+#include "rltdatabase.h"
+#include "sfx.h"
 
 RacePilot::RacePilot(QObject *parent) : QObject(parent)
 {
     m_pCurrentRaceLap = NULL;
+    m_iCurrentRaceID = 0;
 }
 
 
@@ -32,6 +35,7 @@ RacePilot* RacePilot::getByQuadToken(QString token){
         RacePilot *t = new RacePilot();
         t->setPilotName(query.value("name").toString());
         t->setQuadToken(token);
+        t->setDatabaseID(query.value("id").toString());
         return t;
     }else{
         //qDebug() << "RacePilot::initDatabase(): failed to find pilot -" << query.lastError();
@@ -74,14 +78,18 @@ void RacePilot::startLap(){
     this->m_listLaps << this->m_pCurrentRaceLap;
 
     qDebug() << QString("RacePilot::fireLapTime: %1 started lap %2 on %3").arg(this->getPilotName()).arg(this->m_listLaps.size()).arg(this->m_pCurrentRaceLap->getLapStart().toString());
+    SFX::instance()->playBeep();
 }
 
 void RacePilot::finishLap(){
-    this->m_pCurrentRaceLap->finishLap();
+    if(this->m_pCurrentRaceLap->finishLap()){
+        qDebug() << QString("RacePilot::fireLapTime: %1 finished lap %2 on %3").arg(this->getPilotName()).arg(this->m_listLaps.size()).arg(this->m_pCurrentRaceLap->getLapEnd().toString());
 
-    qDebug() << QString("RacePilot::fireLapTime: %1 finished lap %2 on %3").arg(this->getPilotName()).arg(this->m_listLaps.size()).arg(this->m_pCurrentRaceLap->getLapEnd().toString());
-    // let's start a new lap
-    this->startLap();
+        // log the lap to the database
+        RLTDatabase::instance()->addLapTimeToRace(m_iCurrentRaceID,m_strDatabaseID.toInt(),m_pCurrentRaceLap->getLap(),m_pCurrentRaceLap->lapTime());
+        // let's start a new lap
+        this->startLap();
+    }
 }
 
 QString RacePilot::lastLapTimeString(){
@@ -115,4 +123,12 @@ CurrentPilotRaceLap* RacePilot::getFastedLap(){
     }
 
     return fastestLap;
+}
+
+int RacePilot::getID(){
+    return m_strDatabaseID.toInt();
+}
+
+void RacePilot::setCurrentRaceID(int id){
+    m_iCurrentRaceID = id;
 }

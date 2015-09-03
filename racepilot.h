@@ -18,12 +18,14 @@ public:
     void        setDatabaseID(QString);
     QString     getPilotName();
     QString     getQuadToken();
+    int         getID();
     int         lapCount();
     QDateTime   currentLapStartTime();
     QString     lastLapTimeString();
     bool        hasLastLapTime();
     CurrentPilotRaceLap* getFastedLap();
     void        fireLapTime();
+    void        setCurrentRaceID(int);
 
     static RacePilot* getByQuadToken(QString);
 signals:
@@ -37,6 +39,7 @@ private:
     QString m_strQuadToken;
     QString m_strPilotName;
     QString m_strDatabaseID;
+    int     m_iCurrentRaceID;
 
     QList<CurrentPilotRaceLap*> m_listLaps;
     CurrentPilotRaceLap*    m_pCurrentRaceLap;

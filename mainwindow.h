@@ -4,6 +4,9 @@
 #include <QMainWindow>
 #include "rltdatabase.h"
 #include "qextserialport/qextserialport.h"
+#include <QLabel>
+
+#define RLT_VERSION "0.0.1 ALPHA"
 
 namespace Ui {
 class MainWindow;
@@ -30,9 +33,12 @@ private slots:
 
     void onCurrentRacePilotDataChanged();
     void onCurrentRaceFastestLapDataChanged();
+    void onCurentRaceFinished();
     void on_buttonChangeLapBeepPath_clicked();
 
     void on_buttonChangeFastestLapShout_clicked();
+
+    void on_buttonStopRace_clicked();
 
 private:
     void    setupCOMPortGUI();
@@ -41,6 +47,8 @@ private:
     QSqlTableModel *m_pPilotsModel;
     QSqlTableModel *m_pRacesModel;
     QextSerialPort *m_pSerialPort;
+    QLabel          *m_pLabelCOMPortStatus;
+    QLabel          *m_pLabelLastIncommingSignal;
 };
 
 #endif // MAINWINDOW_H

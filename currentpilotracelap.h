@@ -16,7 +16,7 @@ public:
     qint64      lapTime();
     QString     formatedLapTime();
 
-    void        finishLap();
+    bool        finishLap();
     void        startLap();
     bool        isFinished();
     int         getLap();

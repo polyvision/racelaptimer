@@ -3,5 +3,6 @@
         <file>airbirds_weblogo_200.png</file>
         <file>glyphicons-7-user-add.png</file>
         <file>glyphicons-64-power.png</file>
+        <file>app_icon.png</file>
     </qresource>
 </RCC>

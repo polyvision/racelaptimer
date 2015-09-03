@@ -13,6 +13,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    setWindowTitle(QString("FPV-Racing Lap Timer by airbirds.de - %1").arg(RLT_VERSION));
+    setWindowIcon(QIcon("app_icon.png"));
     QCoreApplication::setOrganizationName("polyvision UG");
     QCoreApplication::setOrganizationDomain("polyvision.org");
     QCoreApplication::setApplicationName("RaceLapTimer");
@@ -47,12 +49,23 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setupCOMPortGUI();
 
+    this->m_pLabelCOMPortStatus = new QLabel(this);
+    this->m_pLabelCOMPortStatus->setText("not connected to COM port");
+    this->ui->statusBar->addWidget(m_pLabelCOMPortStatus);
+
+    this->m_pLabelLastIncommingSignal = new QLabel(this);
+    this->m_pLabelLastIncommingSignal->setText("XXX-XXX-XXX");
+    this->ui->statusBar->addWidget(m_pLabelLastIncommingSignal);
+
+
     // settings
     this->ui->labelSettingsLapBeep->setText(Settings::instance()->getLapBeepPath());
     this->ui->labelSettingsFastestLapShoutPath->setText(Settings::instance()->getFastestLapSoundPath());
 
     connect(CurrentRace::instance(),SIGNAL(pilotDataChanged()),this,SLOT(onCurrentRacePilotDataChanged()));
     connect(CurrentRace::instance(),SIGNAL(fastedLapChanged()),this,SLOT(onCurrentRaceFastestLapDataChanged()));
+    connect(CurrentRace::instance(),SIGNAL(raceFinished()),this,SLOT(onCurentRaceFinished()));
+
 }
 
 MainWindow::~MainWindow()
@@ -95,6 +108,8 @@ void MainWindow::on_buttonConnectSerialPort_clicked()
         if (!(m_pSerialPort->lineStatus() & LS_DSR))
             qDebug() << "warning: device is not turned on";
         qDebug() << "listening for data on" << m_pSerialPort->portName();
+
+        this->m_pLabelCOMPortStatus->setText(QString("connected to %1").arg(portList.at(this->ui->cb_COMPorts->currentIndex()).portName));
     }
     else {
         qDebug() << "device failed to open:" << m_pSerialPort->errorString();
@@ -158,7 +173,7 @@ void MainWindow::onCurrentRacePilotDataChanged(){
         this->ui->tableWidget->setItem(i,0,itemPilotName);
 
         // lap count
-        QTableWidgetItem *itemLapCount = new QTableWidgetItem(QString("%1").arg(pilot->lapCount()));
+        QTableWidgetItem *itemLapCount = new QTableWidgetItem(QString("%1").arg(pilot->lapCount()-1));
         this->ui->tableWidget->setItem(i,1,itemLapCount);
 
         // last lap time
@@ -177,6 +192,12 @@ void MainWindow::onCurrentRacePilotDataChanged(){
         }
 
     }
+}
+
+void MainWindow::onCurentRaceFinished(){
+    this->ui->labelFastestLapData->setText("");
+    this->ui->tableWidget->clearContents();
+    this->ui->labelCurrentRaceTitle->setText("");
 }
 
 void MainWindow::onCurrentRaceFastestLapDataChanged(){
@@ -205,4 +226,9 @@ void MainWindow::on_buttonChangeFastestLapShout_clicked()
         Settings::instance()->setFastestLapSoundPath(fileName);
         this->ui->labelSettingsFastestLapShoutPath->setText(fileName);
     }
+}
+
+void MainWindow::on_buttonStopRace_clicked()
+{
+    CurrentRace::instance()->stopRace();
 }

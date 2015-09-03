@@ -27,9 +27,16 @@ void CurrentPilotRaceLap::startLap(){
     this->m_timeLapStart = QDateTime::currentDateTime();
 }
 
-void CurrentPilotRaceLap::finishLap(){
-    m_bFinishedLap = true;
-    this->m_timeLapEnd = QDateTime::currentDateTime();
+bool CurrentPilotRaceLap::finishLap(){
+    QDateTime now = QDateTime::currentDateTime();
+
+    // there must be a difference of one second to finish a lap
+    if(this->m_timeLapStart.msecsTo(now) > 1000){
+        m_bFinishedLap = true;
+        this->m_timeLapEnd = now;
+        return true;
+    }
+    return false;
 }
 
 qint64 CurrentPilotRaceLap::lapTime(){

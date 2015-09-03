@@ -12,6 +12,7 @@ CurrentRace::CurrentRace(QObject *parent) : QObject(parent)
 {
     this->m_pModelRace = NULL;
     m_uiRaceState = CR_RACE_STATE_NOT_RUNNING;
+    m_iFastestLapTime = 0;
 }
 
 
@@ -21,13 +22,17 @@ void CurrentRace::incommingPilotSignal(QString token){
         return;
     }
 
+    qDebug() << QString("CurrentRace::incommingPilotSignal: %1").arg(token);
     RacePilot *pilot = this->getPilotByToken(token);
 
     // add the pilot to the race list or add it if it can be found
     if(pilot == NULL){
         pilot = RacePilot::getByQuadToken(token);
         if(pilot){
+            pilot->setCurrentRaceID(this->m_pModelRace->record(0).value("id").toInt()); // setting the current race id
+
             this->m_listPilots << pilot;
+            RLTDatabase::instance()->addPilotToRace(this->m_pModelRace->record(0).value("id").toInt(),pilot->getID());
             qDebug() << QString("CurrentRace::incommingPilotSignal: added pilot to current race list count %1").arg(this->m_listPilots.size());
         }
     }else{
@@ -36,7 +41,6 @@ void CurrentRace::incommingPilotSignal(QString token){
 
     if(pilot){
         pilot->fireLapTime();
-        SFX::instance()->playBeep();
     }
 
     emit pilotDataChanged();
@@ -62,10 +66,13 @@ void CurrentRace::startRace(int race_id,MainWindow *window){
     window->setCurrentRaceTitle(this->m_pModelRace->record(0).value("title").toString());
 
     m_uiRaceState = CR_RACE_STATE_RUNNING;
+    m_iFastestLapTime = 0;
 }
 
 void CurrentRace::stopRace(){
     m_uiRaceState = CR_RACE_STATE_NOT_RUNNING;
+    this->m_listPilots.clear();
+    emit raceFinished();
 }
 
 RacePilot* CurrentRace::getFastestPilot(){
@@ -86,6 +93,18 @@ RacePilot* CurrentRace::getFastestPilot(){
         }
     }
 
+    if(fastestPilot){
+        if(m_iFastestLapTime == 0){
+            m_iFastestLapTime = fastestPilot->getFastedLap()->lapTime();
+            SFX::instance()->playFastestLap();
+        }else{
+            if(m_iFastestLapTime > fastestPilot->getFastedLap()->lapTime()){
+                m_iFastestLapTime = fastestPilot->getFastedLap()->lapTime();
+                SFX::instance()->playFastestLap();
+            }
+        }
+
+    }
     return fastestPilot;
 }
 

@@ -22,8 +22,8 @@ bool RLTDatabase::initDatabase(){
     QSqlQuery query(m_sqliteDatabase);
     QString strQueryPilotsTable = "CREATE TABLE pilots(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,api_token CHAR(50),quad_token CHAR(50));";
     QString strQueryRacesTable = "CREATE TABLE races(id INTEGER PRIMARY KEY AUTOINCREMENT,title TEXT NOT NULL,created_at TEXT NOT NULL);";
-    QString strQueryRacePilotsTable = "CREATE TABLE race_pilots(id INTEGER PRIMARY KEY AUTOINCREMENT,pilot_id INTEGER);";
-    QString strQueryRaceLapsTable = "CREATE TABLE race_laps(id INTEGER PRIMARY KEY AUTOINCREMENT,race_pilot_id INTEGER,lap_time INTEGER,lap_count INTEGER);";
+    QString strQueryRacePilotsTable = "CREATE TABLE race_pilots(id INTEGER PRIMARY KEY AUTOINCREMENT,pilot_id INTEGER,race_id INTEGER);";
+    QString strQueryRaceLapsTable = "CREATE TABLE race_laps(id INTEGER PRIMARY KEY AUTOINCREMENT,race_id INTEGER,race_pilot_id INTEGER,lap_time INTEGER,lap_count INTEGER);";
 
     if(query.exec(strQueryPilotsTable)){
         qDebug() << "RLTDatabase::initDatabase(): created pilots table";
@@ -41,6 +41,12 @@ bool RLTDatabase::initDatabase(){
         qDebug() << "RLTDatabase::initDatabase(): created race_pilots table";
     }else{
         qDebug() << "RLTDatabase::initDatabase(): failed to create race_pilots table - " << query.lastError();
+    }
+
+    if(query.exec(strQueryRaceLapsTable)){
+        qDebug() << "RLTDatabase::initDatabase(): created race_laps table";
+    }else{
+        qDebug() << "RLTDatabase::initDatabase(): failed to create race_laps table - " << query.lastError();
     }
 
     return true;
@@ -65,4 +71,68 @@ int RLTDatabase::createNewRace(QString v){
         qDebug() << "RLTDatabase::createNewRace(): created new race";
     }
     return query.lastInsertId().toInt();
+}
+
+/**
+ * @brief adds  a pilot to a race, this method may be called multipe tims, it checks that each pilot for a race is unique
+ * @param race_id
+ * @param pilot_id
+ * @return
+ */
+int RLTDatabase::addPilotToRace(int race_id,int pilot_id){
+    qDebug() << QString("RLTDatabase::addPilotToRace(): pilot_id: %1  race_id %2").arg(pilot_id).arg(race_id);
+
+    QSqlQuery query_check_pilot(m_sqliteDatabase);
+
+    query_check_pilot.prepare("SELECT count(*) FROM race_pilots WHERE pilot_id= :pilot_id AND race_id= :race_id");
+    query_check_pilot.bindValue(":pilot_id", pilot_id);
+    query_check_pilot.bindValue(":race_id", race_id);
+
+    query_check_pilot.exec();
+    if(query_check_pilot.next()){
+        //qDebug() << "count: " << query_check_pilot.value(0).toInt();
+
+        if(query_check_pilot.value(0).toInt() == 0){
+            // the pilot didnt get added to the race yet, so let's add him
+            QSqlQuery query_add_pilot(m_sqliteDatabase);
+            query_add_pilot.prepare("INSERT INTO race_pilots (race_id,pilot_id) VALUES(:race_id, :pilot_id);");
+            query_add_pilot.bindValue(":race_id", race_id);
+            query_add_pilot.bindValue(":pilot_id", pilot_id);
+            if(query_add_pilot.exec()){
+                qDebug() << QString("RLTDatabase::addPilotToRace(): added pilot %1 to race %2").arg(pilot_id).arg(race_id);
+                return query_add_pilot.lastInsertId().toInt();
+            }else{
+                qDebug() << "RLTDatabase::addPilotToRace(): failed to add pilot to race " << query_add_pilot.lastError();
+            }
+        }
+    }
+
+    return 0;
+}
+
+int RLTDatabase::addLapTimeToRace(int race_id,int pilot_id,int lap_count,int lap_time){
+    qDebug() << QString("RLTDatabase::addLapTimeToRace(): race_id: %1  pilot_id: %2 lap_number: %3 lap_time: %4").arg(race_id).arg(pilot_id).arg(lap_count).arg(lap_time);
+
+    QSqlQuery query_check_pilot(m_sqliteDatabase);
+    query_check_pilot.prepare("SELECT * FROM race_pilots WHERE pilot_id= :pilot_id AND race_id= :race_id");
+    query_check_pilot.bindValue(":pilot_id", pilot_id);
+    query_check_pilot.bindValue(":race_id", race_id);
+    query_check_pilot.exec();
+
+    if(query_check_pilot.next()){
+        int race_pilot_id = query_check_pilot.value("id").toInt();
+
+        QSqlQuery query_add_lap_to_race(m_sqliteDatabase);
+        query_add_lap_to_race.prepare("INSERT INTO race_laps(race_id,race_pilot_id,lap_time,lap_count) VALUES(:race_id,:race_pilot_id,:lap_time,:lap_count);");
+        query_add_lap_to_race.bindValue(":race_id",race_id);
+        query_add_lap_to_race.bindValue(":race_pilot_id",race_pilot_id);
+        query_add_lap_to_race.bindValue(":lap_time",lap_time);
+        query_add_lap_to_race.bindValue(":lap_count",lap_count);
+
+        if(query_add_lap_to_race.exec()){
+            qDebug() << QString("RLTDatabase::addLapTimeToRace(): added lap to race");
+            return query_check_pilot.lastInsertId().toInt();
+        }
+    }
+    return 0;
 }

@@ -32,6 +32,7 @@ public:
 signals:
     void pilotDataChanged();
     void fastedLapChanged();
+    void raceFinished();
 
 public slots:
 private:
@@ -39,6 +40,7 @@ private:
     QSqlQueryModel *m_pModelRace;
     RacePilot*  getPilotByToken(QString);
     QList<RacePilot*> m_listPilots;
+    qint64           m_iFastestLapTime;
 };
 
 #endif // CURRENTRACE_H

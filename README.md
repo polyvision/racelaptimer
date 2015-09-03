@@ -14,8 +14,4 @@ This project is an open source race lap timer for FPV mini-quad racings. There i
 
 This project is far away from being finished or stable. At present, heavy development is going on.
 
-## ToDo
 
-* changing currentRace class to use slots & signals for race events
-* saving all racing data in the sqlite database
-* customization of sound effects for various race events

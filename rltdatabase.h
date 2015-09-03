@@ -13,6 +13,8 @@ public:
     static RLTDatabase* getInstance();
     void    createDummyPilot();
     int     createNewRace(QString);
+    int     addPilotToRace(int,int);
+    int     addLapTimeToRace(int,int,int,int);
 signals:
 
 public slots:
