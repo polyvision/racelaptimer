@@ -6,7 +6,10 @@
 #include "qextserialport/qextserialport.h"
 #include <QLabel>
 
-#define RLT_VERSION "0.0.1 ALPHA"
+#define RLT_VERSION "0.0.2"
+
+class RaceTableWidget;
+class CurrentRaceWidget;
 
 namespace Ui {
 class MainWindow;
@@ -22,14 +25,12 @@ public:
 
     void setCurrentRaceTitle(QString);
 private slots:
-    void on_buttonSimulatorLog_clicked();
-
     void on_buttonAddPilot_clicked();
     void on_buttonConnectSerialPort_clicked();
 
     void onReadyRead();
     void onDsrChanged(bool status);
-    void on_buttonStartRace_clicked();
+    void onStartRaceClicked();
 
     void onCurrentRacePilotDataChanged();
     void onCurrentRaceFastestLapDataChanged();
@@ -38,7 +39,8 @@ private slots:
 
     void on_buttonChangeFastestLapShout_clicked();
 
-    void on_buttonStopRace_clicked();
+    void onStopRaceClicked();
+    void onSimulateClicked(QString);
 
 private:
     void    setupCOMPortGUI();
@@ -49,6 +51,9 @@ private:
     QextSerialPort *m_pSerialPort;
     QLabel          *m_pLabelCOMPortStatus;
     QLabel          *m_pLabelLastIncommingSignal;
+    QString         m_strIncommingSerialData;
+    RaceTableWidget *m_pRaceTableWidget;
+    CurrentRaceWidget   *m_pCurrentRaceWidget;
 };
 
 #endif // MAINWINDOW_H

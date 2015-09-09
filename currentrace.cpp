@@ -45,7 +45,6 @@ void CurrentRace::incommingPilotSignal(QString token){
 
     emit pilotDataChanged();
     emit fastedLapChanged();
-    qDebug() << "emitted";
 }
 
 RacePilot* CurrentRace::getPilotByToken(QString token){

@@ -1,5 +1,6 @@
 #include "rltdatabase.h"
 #include <QDebug>
+#include "modelrace.h"
 
 RLTDatabase::RLTDatabase()
 {
@@ -14,8 +15,8 @@ RLTDatabase::RLTDatabase()
     }
 }
 
-QSqlDatabase RLTDatabase::database(){
-    return m_sqliteDatabase;
+QSqlDatabase* RLTDatabase::database(){
+    return &m_sqliteDatabase;
 }
 
 bool RLTDatabase::initDatabase(){
@@ -135,4 +136,22 @@ int RLTDatabase::addLapTimeToRace(int race_id,int pilot_id,int lap_count,int lap
         }
     }
     return 0;
+}
+
+QList<ModelRace*> RLTDatabase::getRaces(){
+    QList<ModelRace*> data;
+
+    QSqlQuery query_races(m_sqliteDatabase);
+    query_races.prepare("SELECT * FROM races ORDER BY id DESC");
+    query_races.exec();
+
+    while(query_races.next()){
+        ModelRace *race = new ModelRace();
+        race->setId(query_races.value(0).toInt());
+        race->setName(query_races.value(1).toString());
+        race->setCreatedAt(query_races.value(2).toDateTime());
+        data.append(race);
+    }
+
+    return data;
 }

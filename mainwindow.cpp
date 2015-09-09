@@ -8,6 +8,8 @@
 #include "currentpilotracelap.h"
 #include "settings.h"
 #include <QFileDialog>
+#include "racetablewidget.h"
+#include "currentracewidget.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -22,8 +24,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     this->m_pRLTDatabase = RLTDatabase::instance();
 
+    m_pRaceTableWidget = new RaceTableWidget();
+    this->ui->tabWidget->addTab(m_pRaceTableWidget,"Races");
+
+     m_pCurrentRaceWidget = new CurrentRaceWidget();
+     this->ui->tabWidget->addTab(m_pCurrentRaceWidget,"Current Race");
+
     // pilots table
-    m_pPilotsModel = new QSqlTableModel(this, this->m_pRLTDatabase->database());
+    m_pPilotsModel = new QSqlTableModel(this, *this->m_pRLTDatabase->database());
     m_pPilotsModel->setTable("pilots");
     m_pPilotsModel->setEditStrategy(QSqlTableModel::OnRowChange);
     m_pPilotsModel->select();
@@ -34,18 +42,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->ui->m_uiTableViewPilots->setModel(m_pPilotsModel);
     this->ui->m_uiTableViewPilots->hideColumn(0); // don't show the ID
-
-    // race table
-    m_pRacesModel =  new QSqlTableModel(this, this->m_pRLTDatabase->database());
-    m_pRacesModel->setTable("races");
-    m_pRacesModel->setEditStrategy(QSqlTableModel::OnRowChange);
-    m_pRacesModel->select();
-    m_pRacesModel->setHeaderData(0, Qt::Horizontal, tr("ID"));
-    m_pRacesModel->setHeaderData(1, Qt::Horizontal, tr("Title"));
-    m_pRacesModel->setHeaderData(2, Qt::Horizontal, tr("Started"));
-
-    this->ui->m_tableViewRaces->setModel(m_pRacesModel);
-    this->ui->m_tableViewRaces->hideColumn(0); // don't show the ID
 
     this->setupCOMPortGUI();
 
@@ -65,6 +61,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(CurrentRace::instance(),SIGNAL(pilotDataChanged()),this,SLOT(onCurrentRacePilotDataChanged()));
     connect(CurrentRace::instance(),SIGNAL(fastedLapChanged()),this,SLOT(onCurrentRaceFastestLapDataChanged()));
     connect(CurrentRace::instance(),SIGNAL(raceFinished()),this,SLOT(onCurentRaceFinished()));
+    connect(m_pRaceTableWidget,SIGNAL(signalStartRace()),this,SLOT(onStartRaceClicked()));
+
+    connect(m_pCurrentRaceWidget,SIGNAL(signalStopRace()),this,SLOT(onStopRaceClicked()));
+    connect(m_pCurrentRaceWidget,SIGNAL(signalSimulate(QString)),this,SLOT(onSimulateClicked(QString)));
 
 }
 
@@ -73,9 +73,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::on_buttonSimulatorLog_clicked()
+void MainWindow::onSimulateClicked(QString v)
 {
-    CurrentRace::instance()->incommingPilotSignal(this->ui->lineEdit_SimulatorToken->text());
+    CurrentRace::instance()->incommingPilotSignal(v);
 }
 
 void MainWindow::on_buttonAddPilot_clicked()
@@ -123,8 +123,17 @@ void MainWindow::onReadyRead()
     bytes.resize(a);
     this->m_pSerialPort->read(bytes.data(), bytes.size());
     //qDebug() << "bytes read:" << bytes.size();
-    qDebug() << "bytes:" << bytes;
-    CurrentRace::instance()->incommingPilotSignal(QString(bytes).replace("\r",""));
+    //qDebug() << "bytes:" << bytes;
+    m_strIncommingSerialData = QString(bytes);
+
+    int index = m_strIncommingSerialData.indexOf("#");
+    if(index >= 0){
+        //qDebug() << "before" << m_strIncommingSerialData;
+        m_strIncommingSerialData.chop(m_strIncommingSerialData.length() - index -1);
+        //qDebug() << "after" << m_strIncommingSerialData;
+        this->m_pLabelLastIncommingSignal->setText(m_strIncommingSerialData);
+        CurrentRace::instance()->incommingPilotSignal(m_strIncommingSerialData);
+    }
 }
 
 void MainWindow::onDsrChanged(bool status)
@@ -135,7 +144,7 @@ void MainWindow::onDsrChanged(bool status)
         qDebug() << "device was turned off";
 }
 
-void MainWindow::on_buttonStartRace_clicked()
+void MainWindow::onStartRaceClicked()
 {
     bool ok;
     QString text = QInputDialog::getText(this, tr("Start a new race"),
@@ -150,61 +159,22 @@ void MainWindow::on_buttonStartRace_clicked()
 }
 
 void MainWindow::setCurrentRaceTitle(QString v){
-    this->ui->labelCurrentRaceTitle->setText(v);
+    m_pCurrentRaceWidget->setRaceTitle(v);
 }
 
 void MainWindow::onCurrentRacePilotDataChanged(){
-
-    this->ui->tableWidget->clearContents();
-    this->ui->tableWidget->setColumnCount(5);
-    this->ui->tableWidget->setRowCount(CurrentRace::instance()->getPilotsList()->size());
-    this->ui->tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("Pilot"));
-    this->ui->tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("Laps"));
-    this->ui->tableWidget->setHorizontalHeaderItem(2,new QTableWidgetItem("Last Lap Time"));
-    this->ui->tableWidget->setHorizontalHeaderItem(3,new QTableWidgetItem("Fasted Lap"));
-    this->ui->tableWidget->setHorizontalHeaderItem(4,new QTableWidgetItem("Fasted Lap Time"));
-
-    for (int i = 0; i < CurrentRace::instance()->getPilotsList()->size(); ++i) {
-
-        RacePilot *pilot = CurrentRace::instance()->getPilotsList()->at(i);
-
-        // pilot name
-        QTableWidgetItem *itemPilotName = new QTableWidgetItem(pilot->getPilotName());
-        this->ui->tableWidget->setItem(i,0,itemPilotName);
-
-        // lap count
-        QTableWidgetItem *itemLapCount = new QTableWidgetItem(QString("%1").arg(pilot->lapCount()-1));
-        this->ui->tableWidget->setItem(i,1,itemLapCount);
-
-        // last lap time
-        if(pilot->hasLastLapTime()){
-            QTableWidgetItem *itemLastLapTime = new QTableWidgetItem(QString("%1").arg(pilot->lastLapTimeString()));
-            this->ui->tableWidget->setItem(i,2,itemLastLapTime);
-        }
-
-        // fastest lap // fastest lap time
-        if(pilot->getFastedLap()){
-            QTableWidgetItem *itemFastestLap = new QTableWidgetItem(QString("%1").arg(pilot->getFastedLap()->getLap()));
-            this->ui->tableWidget->setItem(i,3,itemFastestLap);
-
-            QTableWidgetItem *itemFastestLapTime = new QTableWidgetItem(QString("%1").arg(pilot->getFastedLap()->formatedLapTime()));
-            this->ui->tableWidget->setItem(i,4,itemFastestLapTime);
-        }
-
-    }
+    m_pCurrentRaceWidget->updateRaceData();
 }
 
 void MainWindow::onCurentRaceFinished(){
-    this->ui->labelFastestLapData->setText("");
-    this->ui->tableWidget->clearContents();
-    this->ui->labelCurrentRaceTitle->setText("");
+    this->m_pCurrentRaceWidget->raceStopped();
 }
 
 void MainWindow::onCurrentRaceFastestLapDataChanged(){
     // updating fastest pilot
     RacePilot *fastestPilot = CurrentRace::instance()->getFastestPilot();
     if(fastestPilot){
-       this->ui->labelFastestLapData->setText(QString("Pilot: %1 Lap: %2 Time: %3").arg(fastestPilot->getPilotName()).arg(fastestPilot->getFastedLap()->getLap()).arg(fastestPilot->getFastedLap()->formatedLapTime()));
+        m_pCurrentRaceWidget->setFastestLapData(QString("Pilot: %1 Lap: %2 Time: %3").arg(fastestPilot->getPilotName()).arg(fastestPilot->getFastedLap()->getLap()).arg(fastestPilot->getFastedLap()->formatedLapTime()));
     }
 }
 
@@ -228,7 +198,9 @@ void MainWindow::on_buttonChangeFastestLapShout_clicked()
     }
 }
 
-void MainWindow::on_buttonStopRace_clicked()
+void MainWindow::onStopRaceClicked()
 {
     CurrentRace::instance()->stopRace();
+    m_pRaceTableWidget->updateTable();
+    this->ui->tabWidget->setCurrentIndex(2);
 }

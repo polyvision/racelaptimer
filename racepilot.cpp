@@ -82,6 +82,12 @@ void RacePilot::startLap(){
 }
 
 void RacePilot::finishLap(){
+    // one lap can never be faster than  5 seconds
+    QDateTime now = QDateTime::currentDateTime();
+    if(this->m_pCurrentRaceLap->getLapStart().msecsTo(now) < 5000){
+        return;
+    }
+
     if(this->m_pCurrentRaceLap->finishLap()){
         qDebug() << QString("RacePilot::fireLapTime: %1 finished lap %2 on %3").arg(this->getPilotName()).arg(this->m_listLaps.size()).arg(this->m_pCurrentRaceLap->getLapEnd().toString());
 

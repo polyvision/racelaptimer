@@ -21,7 +21,10 @@ SOURCES += main.cpp\
     qextserialport/qextserialenumerator.cpp \
     qextserialport/qextserialport.cpp \
     sfx.cpp \
-    settings.cpp
+    settings.cpp \
+    racetablewidget.cpp \
+    modelrace.cpp \
+    currentracewidget.cpp
 
 HEADERS  += mainwindow.h \
     rltdatabase.h \
@@ -35,7 +38,10 @@ HEADERS  += mainwindow.h \
     qextserialport/qextserialport_global.h \
     qextserialport/qextserialport_p.h \
     sfx.h \
-    settings.h
+    settings.h \
+    racetablewidget.h \
+    modelrace.h \
+    currentracewidget.h
 
 ICON = app_icon.png
 
