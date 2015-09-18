@@ -10,49 +10,43 @@
  * You should have received a copy of the GNU General Public License along with Foobar. If not, see http://www.gnu.org/licenses/.
  **/
 
-#ifndef CURRENTRACE_H
-#define CURRENTRACE_H
+#ifndef CONFIGURATIONWIDGET_H
+#define CONFIGURATIONWIDGET_H
 
 #include <QObject>
-#include <QList>
-#include "singleton.h"
+#include <QWidget>
 
-#define CR_RACE_STATE_NOT_RUNNING   0
-#define CR_RACE_STATE_RUNNING   1
-
-class RacePilot;
-class QTableWidget;
-class QSqlQueryModel;
+class QVBoxLayout;
+class QPushButton;
+class QComboBox;
 class MainWindow;
 class QLabel;
 
-class CurrentRace : public QObject,public Singleton<CurrentRace>
+class ConfigurationWidget : public QWidget
 {
     Q_OBJECT
-    friend class Singleton<CurrentRace>;
-
 public:
-    explicit CurrentRace(QObject *parent = 0);
-    void    incommingPilotSignal(QString);
-
-    void    startRace(int,MainWindow*);
-    void    stopRace();
-
-    RacePilot* getFastestPilot();
-    QList<RacePilot*>* getPilotsList();
-
+    explicit ConfigurationWidget(QWidget *parent = 0);
+    void    setMainWindow(MainWindow*);
 signals:
-    void pilotDataChanged();
-    void fastedLapChanged();
-    void raceFinished();
 
 public slots:
+    void    buttonConnectCOMPortClicked(bool);
+    void    buttonSFXBeepClicked(bool);
+    void    buttonSFXFastestLapClicked(bool);
+
 private:
-    unsigned int     m_uiRaceState;
-    QSqlQueryModel *m_pModelRace;
-    RacePilot*  getPilotByToken(QString);
-    QList<RacePilot*> m_listPilots;
-    qint64           m_iFastestLapTime;
+    void            setupComPorts();
+
+    QVBoxLayout     *m_pLayout;
+    QComboBox       *m_pComboCOMPortSelection;
+    QPushButton     *m_pButtonConnectCOMPort;
+    MainWindow      *m_pMainWindow;
+
+    QLabel          *m_pLabelSFXBeep;
+    QLabel          *m_pLabelSFXFastestLap;
+    QPushButton     *m_pButtonSFXBeep;
+    QPushButton     *m_pButtonSFXFastestLap;
 };
 
-#endif // CURRENTRACE_H
+#endif // CONFIGURATIONWIDGET_H

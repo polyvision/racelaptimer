@@ -10,25 +10,34 @@
  * You should have received a copy of the GNU General Public License along with Foobar. If not, see http://www.gnu.org/licenses/.
  **/
 
-#include "settings.h"
+#ifndef PILOTSWIDGET_H
+#define PILOTSWIDGET_H
 
-Settings::Settings()
+#include <QObject>
+#include <QWidget>
+
+class QTableView;
+class QVBoxLayout;
+class QPushButton;
+class QSqlTableModel;
+
+class PilotsWidget : public QWidget
 {
+    Q_OBJECT
+public:
+    explicit PilotsWidget(QWidget *parent = 0);
 
-}
+signals:
 
-void Settings::setLapBeepPath(QString v){
-    m_Settings.setValue("lap_beep_path",v);
-}
+public slots:
+    void    clickedAddPilot(bool);
 
-void Settings::setFastestLapSoundPath(QString v){
-    m_Settings.setValue("fastest_lap_sound_path",v);
-}
+private:
+    QTableView      *m_pTableView;
+    QVBoxLayout     *m_pLayout;
+    QPushButton     *m_pButtonAddPilot;
+    QSqlTableModel  *m_pPilotsModel;
 
-QString Settings::getLapBeepPath(){
-    return m_Settings.value("lap_beep_path").toString();
-}
+};
 
-QString Settings::getFastestLapSoundPath(){
-    return m_Settings.value("fastest_lap_sound_path").toString();
-}
+#endif // PILOTSWIDGET_H

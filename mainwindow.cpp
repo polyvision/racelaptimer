@@ -1,3 +1,15 @@
+/**
+ * OpenRaceLapTimer - Copyright 2015 by airbirds.de, a project of polyvision UG (haftungsbeschränkt)
+ *
+ * Author: Alexander B. Bierbrauer
+ *
+ * This file is part of OpenRaceLapTimer.
+ *
+ * OpenRaceLapTimer is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * OpenRaceLapTimer is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with Foobar. If not, see http://www.gnu.org/licenses/.
+ **/
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDebug>
@@ -10,40 +22,41 @@
 #include <QFileDialog>
 #include "racetablewidget.h"
 #include "currentracewidget.h"
+#include "pilotswidget.h"
+#include <QTabWidget>
+#include <QVBoxLayout>
+#include "configurationwidget.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    setWindowTitle(QString("FPV-Racing Lap Timer by airbirds.de - %1").arg(RLT_VERSION));
-    setWindowIcon(QIcon("app_icon.png"));
     QCoreApplication::setOrganizationName("polyvision UG");
     QCoreApplication::setOrganizationDomain("polyvision.org");
     QCoreApplication::setApplicationName("RaceLapTimer");
 
     ui->setupUi(this);
+    setWindowTitle(QString("OpenRaceLapTimer by airbirds.de - v%1").arg(RLT_VERSION));
+    setWindowIcon(QIcon("app_icon.png"));
+
+    QVBoxLayout *pLayout = new QVBoxLayout(ui->centralWidget);
+    m_pTabWidget = new QTabWidget();
+    pLayout->addWidget(m_pTabWidget);
+
     this->m_pRLTDatabase = RLTDatabase::instance();
 
+    m_pConfigurationWidget = new ConfigurationWidget();
+    m_pConfigurationWidget->setMainWindow(this);
+    this->m_pTabWidget->addTab(m_pConfigurationWidget,"Configuration");
+
+    m_pPilotsWidget = new PilotsWidget();
+    this->m_pTabWidget->addTab(m_pPilotsWidget,"Pilots");
+
     m_pRaceTableWidget = new RaceTableWidget();
-    this->ui->tabWidget->addTab(m_pRaceTableWidget,"Races");
+    this->m_pTabWidget->addTab(m_pRaceTableWidget,"Races");
 
      m_pCurrentRaceWidget = new CurrentRaceWidget();
-     this->ui->tabWidget->addTab(m_pCurrentRaceWidget,"Current Race");
-
-    // pilots table
-    m_pPilotsModel = new QSqlTableModel(this, *this->m_pRLTDatabase->database());
-    m_pPilotsModel->setTable("pilots");
-    m_pPilotsModel->setEditStrategy(QSqlTableModel::OnRowChange);
-    m_pPilotsModel->select();
-    m_pPilotsModel->setHeaderData(0, Qt::Horizontal, tr("ID"));
-    m_pPilotsModel->setHeaderData(1, Qt::Horizontal, tr("Name"));
-    m_pPilotsModel->setHeaderData(2, Qt::Horizontal, tr("API-Token"));
-    m_pPilotsModel->setHeaderData(3, Qt::Horizontal, tr("Quad-Token"));
-
-    this->ui->m_uiTableViewPilots->setModel(m_pPilotsModel);
-    this->ui->m_uiTableViewPilots->hideColumn(0); // don't show the ID
-
-    this->setupCOMPortGUI();
+     this->m_pTabWidget->addTab(m_pCurrentRaceWidget,"Current Race");
 
     this->m_pLabelCOMPortStatus = new QLabel(this);
     this->m_pLabelCOMPortStatus->setText("not connected to COM port");
@@ -54,9 +67,6 @@ MainWindow::MainWindow(QWidget *parent) :
     this->ui->statusBar->addWidget(m_pLabelLastIncommingSignal);
 
 
-    // settings
-    this->ui->labelSettingsLapBeep->setText(Settings::instance()->getLapBeepPath());
-    this->ui->labelSettingsFastestLapShoutPath->setText(Settings::instance()->getFastestLapSoundPath());
 
     connect(CurrentRace::instance(),SIGNAL(pilotDataChanged()),this,SLOT(onCurrentRacePilotDataChanged()));
     connect(CurrentRace::instance(),SIGNAL(fastedLapChanged()),this,SLOT(onCurrentRaceFastestLapDataChanged()));
@@ -78,24 +88,8 @@ void MainWindow::onSimulateClicked(QString v)
     CurrentRace::instance()->incommingPilotSignal(v);
 }
 
-void MainWindow::on_buttonAddPilot_clicked()
-{
-    RLTDatabase::instance()->createDummyPilot();
-    m_pPilotsModel->select();
-}
-
-void MainWindow::setupCOMPortGUI(){
-    QList<QextPortInfo> portList = QextSerialEnumerator::getPorts();
-    for(int i = 0; i < portList.size(); i++){
-        this->ui->cb_COMPorts->addItem(QString("%1 - %2").arg(portList.at(i).portName).arg(portList.at(i).friendName));
-    }
-}
-
-void MainWindow::on_buttonConnectSerialPort_clicked()
-{
-    QList<QextPortInfo> portList = QextSerialEnumerator::getPorts();
-
-    this->m_pSerialPort = new QextSerialPort(portList.at(this->ui->cb_COMPorts->currentIndex()).portName, QextSerialPort::EventDriven);
+void MainWindow::connectCOM(QString v){
+    this->m_pSerialPort = new QextSerialPort(v, QextSerialPort::EventDriven);
     m_pSerialPort->setBaudRate(BAUD9600);
     m_pSerialPort->setFlowControl(FLOW_OFF);
     m_pSerialPort->setParity(PAR_NONE);
@@ -109,7 +103,7 @@ void MainWindow::on_buttonConnectSerialPort_clicked()
             qDebug() << "warning: device is not turned on";
         qDebug() << "listening for data on" << m_pSerialPort->portName();
 
-        this->m_pLabelCOMPortStatus->setText(QString("connected to %1").arg(portList.at(this->ui->cb_COMPorts->currentIndex()).portName));
+        this->m_pLabelCOMPortStatus->setText(QString("connected to %1").arg(v));
     }
     else {
         qDebug() << "device failed to open:" << m_pSerialPort->errorString();
@@ -153,7 +147,7 @@ void MainWindow::onStartRaceClicked()
     if (ok && !text.isEmpty()){
         int race_id = RLTDatabase::instance()->createNewRace(text);
         CurrentRace::instance()->startRace(race_id,this);
-        this->ui->tabWidget->setCurrentIndex(3);
+        this->m_pTabWidget->setCurrentIndex(3);
     }
 
 }
@@ -178,29 +172,9 @@ void MainWindow::onCurrentRaceFastestLapDataChanged(){
     }
 }
 
-void MainWindow::on_buttonChangeLapBeepPath_clicked()
-{
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Select WAV"), NULL, tr("sound files (*.wav)"));
-    if(!fileName.isEmpty()){
-        Settings::instance()->setLapBeepPath(fileName);
-        this->ui->labelSettingsLapBeep->setText(fileName);
-    }
-}
-
-void MainWindow::on_buttonChangeFastestLapShout_clicked()
-{
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Select WAV"), NULL, tr("sound files (*.wav)"));
-    if(!fileName.isEmpty()){
-        Settings::instance()->setFastestLapSoundPath(fileName);
-        this->ui->labelSettingsFastestLapShoutPath->setText(fileName);
-    }
-}
-
 void MainWindow::onStopRaceClicked()
 {
     CurrentRace::instance()->stopRace();
     m_pRaceTableWidget->updateTable();
-    this->ui->tabWidget->setCurrentIndex(2);
+    this->m_pTabWidget->setCurrentIndex(2);
 }

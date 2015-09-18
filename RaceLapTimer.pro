@@ -24,7 +24,9 @@ SOURCES += main.cpp\
     settings.cpp \
     racetablewidget.cpp \
     modelrace.cpp \
-    currentracewidget.cpp
+    currentracewidget.cpp \
+    pilotswidget.cpp \
+    configurationwidget.cpp
 
 HEADERS  += mainwindow.h \
     rltdatabase.h \
@@ -41,7 +43,9 @@ HEADERS  += mainwindow.h \
     settings.h \
     racetablewidget.h \
     modelrace.h \
-    currentracewidget.h
+    currentracewidget.h \
+    pilotswidget.h \
+    configurationwidget.h
 
 ICON = app_icon.png
 
