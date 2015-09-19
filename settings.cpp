@@ -32,3 +32,17 @@ QString Settings::getLapBeepPath(){
 QString Settings::getFastestLapSoundPath(){
     return m_Settings.value("fastest_lap_sound_path").toString();
 }
+
+void Settings::setTrackingTimeout(int v){
+    m_Settings.setValue("tracking_timeout_ms",v);
+}
+
+int Settings::getTrackingTimeout(){
+    int v = m_Settings.value("tracking_timeout_ms").toInt();
+
+    if (v < 100){
+        return 100;
+    }
+
+    return v;
+}

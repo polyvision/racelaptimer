@@ -26,6 +26,7 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include "configurationwidget.h"
+#include "aboutdialog.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -76,11 +77,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_pCurrentRaceWidget,SIGNAL(signalStopRace()),this,SLOT(onStopRaceClicked()));
     connect(m_pCurrentRaceWidget,SIGNAL(signalSimulate(QString)),this,SLOT(onSimulateClicked(QString)));
 
+    connect(this->ui->actionAbout, SIGNAL(triggered()), this, SLOT(openAboutDialog()));
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::openAboutDialog(){
+    AboutDialog *dialog = new AboutDialog(this);
+    dialog->showNormal();
 }
 
 void MainWindow::onSimulateClicked(QString v)

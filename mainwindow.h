@@ -54,6 +54,7 @@ private slots:
     void onStopRaceClicked();
     void onSimulateClicked(QString);
 
+    void openAboutDialog();
 private:
     Ui::MainWindow      *ui;
     RLTDatabase         *m_pRLTDatabase;

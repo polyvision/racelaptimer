@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     modelrace.cpp \
     currentracewidget.cpp \
     pilotswidget.cpp \
-    configurationwidget.cpp
+    configurationwidget.cpp \
+    aboutdialog.cpp
 
 HEADERS  += mainwindow.h \
     rltdatabase.h \
@@ -45,7 +46,8 @@ HEADERS  += mainwindow.h \
     modelrace.h \
     currentracewidget.h \
     pilotswidget.h \
-    configurationwidget.h
+    configurationwidget.h \
+    aboutdialog.h
 
 ICON = app_icon.png
 
@@ -55,10 +57,13 @@ macx {
 }
 
 win32 {
+  RC_ICONS = appicon.ico
+
   SOURCES += qextserialport/qextserialenumerator_win.cpp \
       qextserialport/qextserialport_win.cpp \
 }
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    aboutdialog.ui
 
 RESOURCES += \
     resources.qrc

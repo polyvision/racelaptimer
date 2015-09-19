@@ -17,6 +17,7 @@
 #include <QDebug>
 #include "rltdatabase.h"
 #include "sfx.h"
+#include "settings.h"
 
 RacePilot::RacePilot(QObject *parent) : QObject(parent)
 {
@@ -96,7 +97,7 @@ void RacePilot::startLap(){
 void RacePilot::finishLap(){
     // one lap can never be faster than  5 seconds
     QDateTime now = QDateTime::currentDateTime();
-    if(this->m_pCurrentRaceLap->getLapStart().msecsTo(now) < 5000){
+    if(this->m_pCurrentRaceLap->getLapStart().msecsTo(now) < Settings::instance()->getTrackingTimeout()){
         return;
     }
 

@@ -10,31 +10,25 @@
  * You should have received a copy of the GNU General Public License along with Foobar. If not, see http://www.gnu.org/licenses/.
  **/
 
-#ifndef SETTINGS_H
-#define SETTINGS_H
+#ifndef ABOUTDIALOG_H
+#define ABOUTDIALOG_H
 
-#include "singleton.h"
-#include <QSettings>
+#include <QDialog>
 
-class Settings: public Singleton<Settings>
+namespace Ui {
+class AboutDialog;
+}
+
+class AboutDialog : public QDialog
 {
-    friend class Singleton<Settings>;
+    Q_OBJECT
 
 public:
-    Settings();
-    void    setLapBeepPath(QString v);
-    void    setFastestLapSoundPath(QString v);
-    void    setTrackingTimeout(int);
+    explicit AboutDialog(QWidget *parent = 0);
+    ~AboutDialog();
 
-    QString getLapBeepPath();
-    QString getFastestLapSoundPath();
-    int     getTrackingTimeout();
-
-signals:
-
-public slots:
 private:
-    QSettings m_Settings;
+    Ui::AboutDialog *ui;
 };
 
-#endif // SETTINGS_H
+#endif // ABOUTDIALOG_H

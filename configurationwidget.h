@@ -21,6 +21,7 @@ class QPushButton;
 class QComboBox;
 class MainWindow;
 class QLabel;
+class QLineEdit;
 
 class ConfigurationWidget : public QWidget
 {
@@ -34,7 +35,7 @@ public slots:
     void    buttonConnectCOMPortClicked(bool);
     void    buttonSFXBeepClicked(bool);
     void    buttonSFXFastestLapClicked(bool);
-
+    void    lineEditTimeoutChanged(QString);
 private:
     void            setupComPorts();
 
@@ -47,6 +48,9 @@ private:
     QLabel          *m_pLabelSFXFastestLap;
     QPushButton     *m_pButtonSFXBeep;
     QPushButton     *m_pButtonSFXFastestLap;
+
+    QLabel          *m_pLabelTrackingTimeout;
+    QLineEdit       *m_pLineEditTrackingTimeout;
 };
 
 #endif // CONFIGURATIONWIDGET_H

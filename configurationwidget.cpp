@@ -14,6 +14,7 @@
 #include <QGroupBox>
 #include "qextserialport/qextserialenumerator.h"
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QComboBox>
 #include <QDebug>
 #include <mainwindow.h>
@@ -21,15 +22,19 @@
 #include <QLabel>
 #include "settings.h"
 #include "qfiledialog.h"
+#include <QLineEdit>
 
 ConfigurationWidget::ConfigurationWidget(QWidget *parent) : QWidget(parent)
 {
     m_pLayout = new QVBoxLayout(this);
 
+    QHBoxLayout *firstLineHBox = new QHBoxLayout();
+    m_pLayout->addLayout(firstLineHBox);
+
     // COM
     QGroupBox *pCOMGroupBox = new QGroupBox();
     pCOMGroupBox->setTitle("COM-Port for incomming data");
-    m_pLayout->addWidget(pCOMGroupBox);
+    firstLineHBox->addWidget(pCOMGroupBox);
 
     QVBoxLayout *pLayoutCOMGroupBox = new QVBoxLayout(pCOMGroupBox);
     m_pComboCOMPortSelection = new QComboBox();
@@ -38,6 +43,22 @@ ConfigurationWidget::ConfigurationWidget(QWidget *parent) : QWidget(parent)
     m_pButtonConnectCOMPort = new QPushButton();
     m_pButtonConnectCOMPort->setText("connect");
     pLayoutCOMGroupBox->addWidget(m_pButtonConnectCOMPort);
+
+    // general settings
+    QGroupBox *pGeneralGroupBox = new QGroupBox();
+    pGeneralGroupBox->setTitle("general settings");
+    firstLineHBox->addWidget(pGeneralGroupBox);
+
+    QVBoxLayout *pGeneralGroupBoxLayout = new QVBoxLayout(pGeneralGroupBox);
+    this->m_pLabelTrackingTimeout = new QLabel();
+    this->m_pLabelTrackingTimeout->setText("Tracking timeout (ms)");
+    pGeneralGroupBoxLayout->addWidget(m_pLabelTrackingTimeout);
+
+    this->m_pLineEditTrackingTimeout = new QLineEdit();
+    m_pLineEditTrackingTimeout->setText(QString("%1").arg(Settings::instance()->getTrackingTimeout()));
+    pGeneralGroupBoxLayout->addWidget(m_pLineEditTrackingTimeout);
+
+
 
     // SFX
     QGroupBox *pSFXGroupBox = new QGroupBox();
@@ -68,6 +89,7 @@ ConfigurationWidget::ConfigurationWidget(QWidget *parent) : QWidget(parent)
     connect(m_pButtonConnectCOMPort,SIGNAL(clicked(bool)),this,SLOT(buttonConnectCOMPortClicked(bool)));
     connect(m_pButtonSFXBeep,SIGNAL(clicked(bool)),this,SLOT(buttonSFXBeepClicked(bool)));
     connect(m_pButtonSFXFastestLap,SIGNAL(clicked(bool)),this,SLOT(buttonSFXFastestLapClicked(bool)));
+    connect(m_pLineEditTrackingTimeout,SIGNAL(textChanged(QString)),this,SLOT(lineEditTimeoutChanged(QString)));
 }
 
 void ConfigurationWidget::setMainWindow(MainWindow* v){
@@ -106,4 +128,8 @@ void ConfigurationWidget::buttonSFXFastestLapClicked(bool){
         Settings::instance()->setFastestLapSoundPath(fileName);
         m_pLabelSFXFastestLap->setText(QString("fastest lap: %1").arg(Settings::instance()->getFastestLapSoundPath()));
     }
+}
+
+void ConfigurationWidget::lineEditTimeoutChanged(QString v){
+    Settings::instance()->setTrackingTimeout(v.toInt());
 }
